@@ -82,7 +82,7 @@ set(models none shell
 	standard_vtol tailsitter tiltrotor a3t_vau
 	rover r1_rover boat cloudship
 	uuv_hippocampus)
-set(worlds none empty baylands ksql_airport mcmillan_airfield sonoma_raceway warehouse windy)
+set(worlds none empty baylands ksql_airport mcmillan_airfield sonoma_raceway space53 warehouse windy)
 set(all_posix_vmd_make_targets)
 foreach(viewer ${viewers})
 	foreach(debugger ${debuggers})
