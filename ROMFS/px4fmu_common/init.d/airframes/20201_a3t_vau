@@ -1,9 +1,24 @@
 #!/bin/sh
 #
-# @name VTOL A3T_VAU
-#
+# @name A3T_VAU 
 # @type VTOL Tiltrotor
+# @class VTOL
 #
+# @maintainer Akarsh Gopal <akarsh98@gmail.com>
+#
+# @output MAIN1 Front right motor 
+# @output MAIN2 Rear left motor
+# @output MAIN3 Front left motor
+# @output MAIN4 Rear right motor
+#
+# @output AUX1 Front right tilt
+# @output AUX2 Front right tilt
+# @output AUX3 Right canard elevator
+# @output AUX4 Left canard elevator
+# @output AUX5 Right aileron
+# @output AUX6 Left aileron
+
+# Default params need to be tuned!!
 
 sh /etc/init.d/rc.vtol_defaults
 
@@ -48,5 +63,8 @@ fi
 
 set MAV_TYPE 21
 
-set MIXER_FILE etc/mixers/a3t_vau_sitl.main.mix
-set MIXER custom
+set MIXER a3t_vau.main.mix
+set MIXER_AUX a3t_vau.aux.mix
+
+set PWM_OUT 1234
+set PWM_AUX_OUT 12345
