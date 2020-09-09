@@ -18,8 +18,6 @@
 # @output AUX5 Right aileron
 # @output AUX6 Left aileron
 
-# Default params need to be tuned!!
-
 sh /etc/init.d/rc.vtol_defaults
 
 if [ $AUTOCNF = yes ]
