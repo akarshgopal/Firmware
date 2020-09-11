@@ -17,6 +17,7 @@
 # @output AUX4 Left canard elevator
 # @output AUX5 Right aileron
 # @output AUX6 Left aileron
+#
 
 sh /etc/init.d/rc.vtol_defaults
 
