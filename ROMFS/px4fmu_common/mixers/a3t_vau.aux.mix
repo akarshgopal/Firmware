@@ -1,37 +1,40 @@
 Mixer for a3t_vau canard tiltrotor (x motor configuration)
 ================================================
 
-This file defines a single mixer for a tiltrotor (SITL gazebo) with motors in X configuration. The plane has two ailerons and one elevator.
+This file defines a single mixer for a3t's vau tiltrotor uav with motors in X configuration. 
+The plane has two ailerons and two elevators in canard configuration. 
+For tilting, the aircraft has 2 tilt servos which should operate in sync, but opposite direction.
+The elevator servos are mounted to operate in opposite directions, and aileron servos should operate in same direction.
 
 # tilt servo motor 1
 M: 1
-O:      10000  10000      0 -10000  10000
-S: 1 4      0  20000  -7000 -10000  10000
+O:       10000   10000   0 -10000  10000
+S: 1 4   -10000   -10000  10000 -10000  10000
 
 # tilt servo motor 2
 M: 1
-O:      10000  10000      0 -10000  10000
-S: 1 4      0  -20000  -7000 -10000  10000
+O:       10000   10000   0 -10000  10000
+S: 1 4   10000   10000  -10000 -10000  10000
 
 # mixer for right elevator
 M: 1
 O:       10000   10000   0 -10000  10000
-S: 1 1   10000   10000    0 -10000  10000
+S: 1 1   -10000   -10000  0 -10000  10000
 
 # mixer for the left elevator
 M: 1
 O:       10000   10000   0 -10000  10000
-S: 1 1   -10000   -10000  0 -10000  10000
+S: 1 1   10000   10000  0 -10000  10000
 
 # mixer for the right aileron
 M: 1
 O:      10000  10000   0 -10000  10000
-S: 1 0  10000  10000    0 -10000  10000
+S: 1 0  -10000  -10000    0 -10000  10000
 
 # mixer for the left aileron
 M: 1
 O:      10000  10000   0 -10000  10000
-S: 1 0  -10000 -10000    0 -10000  10000
+S: 1 0  -10000  -10000    0 -10000  10000
 
 
 
