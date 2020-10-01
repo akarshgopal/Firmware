@@ -9,12 +9,12 @@ The elevator servos are mounted to operate in opposite directions, and aileron s
 # tilt servo motor 1
 M: 1
 O:       10000   10000   0 -10000  10000
-S: 1 4   -10000   -10000  10000 -10000  10000
+S: 1 4   -10000   -20000  10000 -10000  10000
 
 # tilt servo motor 2
 M: 1
 O:       10000   10000   0 -10000  10000
-S: 1 4   10000   10000  -10000 -10000  10000
+S: 1 4   10000   20000  -10000 -10000  10000
 
 # mixer for right elevator
 M: 1
