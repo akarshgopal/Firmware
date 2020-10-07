@@ -1115,6 +1115,7 @@ Commander::handle_command(vehicle_status_s *status_local, const vehicle_command_
 	case vehicle_command_s::VEHICLE_CMD_DO_SET_ROI_WPNEXT_OFFSET:
 	case vehicle_command_s::VEHICLE_CMD_DO_SET_ROI_NONE:
 	case vehicle_command_s::VEHICLE_CMD_FIXED_MAG_CAL_YAW:
+	case vehicle_command_s::VEHICLE_CMD_INJECT_FAILURE:
 		/* ignore commands that are handled by other parts of the system */
 		break;
 
@@ -1427,9 +1428,6 @@ Commander::run()
 
 			status.rc_input_mode = _param_rc_in_off.get();
 
-			// percentage (* 0.01) needs to be doubled because RC total interval is 2, not 1
-			_min_stick_change = _param_min_stick_change.get() * 0.02f;
-
 			rc_arm_hyst = _param_rc_arm_hyst.get() * COMMANDER_MONITORING_LOOPSPERMSEC;
 
 			_arm_requirements.arm_authorization = _param_arm_auth_required.get();
@@ -1532,6 +1530,41 @@ Commander::run()
 			}
 		}
 
+		/* Update land detector */
+		if (_land_detector_sub.updated()) {
+			const bool was_landed = _land_detector.landed;
+			_land_detector_sub.copy(&_land_detector);
+
+			// Only take actions if armed
+			if (armed.armed) {
+				if (!was_landed && _land_detector.landed) {
+					mavlink_log_info(&mavlink_log_pub, "Landing detected");
+
+				} else if (was_landed && !_land_detector.landed) {
+					mavlink_log_info(&mavlink_log_pub, "Takeoff detected");
+					_time_at_takeoff = hrt_absolute_time();
+					_have_taken_off_since_arming = true;
+
+					// Set all position and velocity test probation durations to takeoff value
+					// This is a larger value to give the vehicle time to complete a failsafe landing
+					// if faulty sensors cause loss of navigation shortly after takeoff.
+					_gpos_probation_time_us = _param_com_pos_fs_prob.get() * 1_s;
+					_lpos_probation_time_us = _param_com_pos_fs_prob.get() * 1_s;
+					_lvel_probation_time_us = _param_com_pos_fs_prob.get() * 1_s;
+
+					// automatically set or update home position
+					if (!_home_pub.get().manual_home) {
+						// set the home position when taking off, but only if we were previously disarmed
+						// and at least 500 ms from commander start spent to avoid setting home on in-air restart
+						if (_should_set_home_on_takeoff && (hrt_elapsed_time(&_boot_timestamp) > INAIR_RESTART_HOLDOFF_INTERVAL)) {
+							_should_set_home_on_takeoff = false;
+							set_home_position();
+						}
+					}
+				}
+			}
+		}
+
 		/* update safety topic */
 		if (_safety_sub.updated()) {
 			const bool previous_safety_off = _safety.safety_off;
@@ -1542,12 +1575,9 @@ Commander::run()
 
 					bool safety_disarm_allowed = (status.hil_state == vehicle_status_s::HIL_STATE_OFF);
 
-					// if land detector is available then prevent disarming via safety button if not landed
-					if (hrt_elapsed_time(&_land_detector.timestamp) < 1_s) {
-
-						bool maybe_landing = (_land_detector.landed || _land_detector.maybe_landed);
-
-						if (!maybe_landing) {
+					// prevent disarming via safety button if not landed
+					if (hrt_elapsed_time(&_land_detector.timestamp) < 10_s) {
+						if (!_land_detector.landed) {
 							safety_disarm_allowed = false;
 						}
 					}
@@ -1563,7 +1593,7 @@ Commander::run()
 				if (_safety.safety_switch_available && previous_safety_off != _safety.safety_off) {
 
 					if (_safety.safety_off) {
-						set_tune(TONE_NOTIFY_POSITIVE_TUNE);
+						set_tune(tune_control_s::TUNE_ID_NOTIFY_POSITIVE);
 
 					} else {
 						tune_neutral(true);
@@ -1629,32 +1659,6 @@ Commander::run()
 		}
 
 		estimator_check(status_flags);
-
-		/* Update land detector */
-		if (_land_detector_sub.updated()) {
-			_was_landed = _land_detector.landed;
-			_land_detector_sub.copy(&_land_detector);
-
-			// Only take actions if armed
-			if (armed.armed) {
-				if (_was_landed != _land_detector.landed) {
-					if (_land_detector.landed) {
-						mavlink_log_info(&mavlink_log_pub, "Landing detected");
-
-					} else {
-						mavlink_log_info(&mavlink_log_pub, "Takeoff detected");
-						_have_taken_off_since_arming = true;
-
-						// Set all position and velocity test probation durations to takeoff value
-						// This is a larger value to give the vehicle time to complete a failsafe landing
-						// if faulty sensors cause loss of navigation shortly after takeoff.
-						_gpos_probation_time_us = _param_com_pos_fs_prob.get() * 1_s;
-						_lpos_probation_time_us = _param_com_pos_fs_prob.get() * 1_s;
-						_lvel_probation_time_us = _param_com_pos_fs_prob.get() * 1_s;
-					}
-				}
-			}
-		}
 
 
 		// Auto disarm when landed or kill switch engaged
@@ -1907,10 +1911,12 @@ Commander::run()
 
 		if ((override_auto_mode || override_offboard_mode) && is_rotary_wing
 		    && !in_low_battery_failsafe && !_geofence_warning_action_on) {
+			const float minimum_stick_deflection = 0.01f * _param_com_rc_stick_ov.get();
+
 			// transition to previous state if sticks are touched
 			if (hrt_elapsed_time(&_manual_control_setpoint.timestamp) < 1_s && // don't use uninitialized or old messages
-			    ((fabsf(_manual_control_setpoint.x) > _min_stick_change) ||
-			     (fabsf(_manual_control_setpoint.y) > _min_stick_change))) {
+			    ((fabsf(_manual_control_setpoint.x) > minimum_stick_deflection) ||
+			     (fabsf(_manual_control_setpoint.y) > minimum_stick_deflection))) {
 				// revert to position control in any case
 				main_state_transition(status, commander_state_s::MAIN_STATE_POSCTL, status_flags, &_internal_state);
 				mavlink_log_info(&mavlink_log_pub, "Pilot took over control using sticks");
@@ -2011,13 +2017,13 @@ Commander::run()
 							  && !arm_switch_or_button_mapped;
 			/* allow a grace period for re-arming: preflight checks don't need to pass during that time,
 			 * for example for accidential in-air disarming */
-			const bool in_arming_grace_period = (_last_disarmed_timestamp != 0)
-							    && (hrt_elapsed_time(&_last_disarmed_timestamp) < 5_s);
+			const bool in_rearming_grace_period = _param_com_rearm_grace.get() && (_last_disarmed_timestamp != 0)
+							      && (hrt_elapsed_time(&_last_disarmed_timestamp) < 5_s);
 
 			const bool arm_switch_to_arm_transition = !_param_arm_switch_is_button.get() &&
 					(_last_manual_control_setpoint_arm_switch == manual_control_setpoint_s::SWITCH_POS_OFF) &&
 					(_manual_control_setpoint.arm_switch == manual_control_setpoint_s::SWITCH_POS_ON) &&
-					(_manual_control_setpoint.z < 0.1f || in_arming_grace_period);
+					(_manual_control_setpoint.z < 0.1f || in_rearming_grace_period);
 
 			if (!in_armed_state &&
 			    (status.rc_input_mode != vehicle_status_s::RC_IN_MODE_OFF) &&
@@ -2045,7 +2051,7 @@ Commander::run()
 
 					} else if (status.arming_state == vehicle_status_s::ARMING_STATE_STANDBY) {
 						arming_ret = arming_state_transition(&status, _safety, vehicle_status_s::ARMING_STATE_ARMED, &armed,
-										     !in_arming_grace_period /* fRunPreArmChecks */,
+										     !in_rearming_grace_period /* fRunPreArmChecks */,
 										     &mavlink_log_pub, &status_flags, _arm_requirements, hrt_elapsed_time(&_boot_timestamp),
 										     (arm_switch_to_arm_transition ? arm_disarm_reason_t::RC_SWITCH : arm_disarm_reason_t::RC_STICK));
 
@@ -2189,7 +2195,7 @@ Commander::run()
 		 * as finished even though we only just started with the takeoff. Therefore, we also
 		 * check the timestamp of the mission_result topic. */
 		if (_internal_state.main_state == commander_state_s::MAIN_STATE_AUTO_TAKEOFF
-		    && (_mission_result_sub.get().timestamp > _internal_state.timestamp)
+		    && (_mission_result_sub.get().timestamp >= _internal_state.timestamp)
 		    && _mission_result_sub.get().finished) {
 
 			const bool mission_available = (_mission_result_sub.get().timestamp > _boot_timestamp)
@@ -2265,7 +2271,7 @@ Commander::run()
 						armed.force_failsafe = true;
 						_flight_termination_triggered = true;
 						mavlink_log_emergency(&mavlink_log_pub, "Critical failure detected: terminate flight");
-						set_tune_override(TONE_PARACHUTE_RELEASE_TUNE);
+						set_tune_override(tune_control_s::TUNE_ID_PARACHUTE_RELEASE);
 					}
 				}
 			}
@@ -2277,14 +2283,6 @@ Commander::run()
 		// automatically set or update home position
 		if (!_home_pub.get().manual_home) {
 			const vehicle_local_position_s &local_position = _local_position_sub.get();
-
-			// set the home position when taking off, but only if we were previously disarmed
-			// and at least 500 ms from commander start spent to avoid setting home on in-air restart
-			if (_should_set_home_on_takeoff && _was_landed && !_land_detector.landed &&
-			    (hrt_elapsed_time(&_boot_timestamp) > INAIR_RESTART_HOLDOFF_INTERVAL)) {
-				_should_set_home_on_takeoff = false;
-				set_home_position();
-			}
 
 			if (!armed.armed) {
 				if (status_flags.condition_home_position_valid) {
@@ -2441,25 +2439,25 @@ Commander::run()
 		    (_safety.safety_switch_available || (_safety.safety_switch_available && _safety.safety_off))) {
 
 			/* play tune when armed */
-			set_tune(TONE_ARMING_WARNING_TUNE);
+			set_tune(tune_control_s::TUNE_ID_ARMING_WARNING);
 			_arm_tune_played = true;
 
 		} else if (!status_flags.usb_connected &&
 			   (status.hil_state != vehicle_status_s::HIL_STATE_ON) &&
 			   (_battery_warning == battery_status_s::BATTERY_WARNING_CRITICAL)) {
 			/* play tune on battery critical */
-			set_tune(TONE_BATTERY_WARNING_FAST_TUNE);
+			set_tune(tune_control_s::TUNE_ID_BATTERY_WARNING_FAST);
 
 		} else if ((status.hil_state != vehicle_status_s::HIL_STATE_ON) &&
 			   (_battery_warning == battery_status_s::BATTERY_WARNING_LOW)) {
 			/* play tune on battery warning */
-			set_tune(TONE_BATTERY_WARNING_SLOW_TUNE);
+			set_tune(tune_control_s::TUNE_ID_BATTERY_WARNING_SLOW);
 
 		} else if (status.failsafe) {
 			tune_failsafe(true);
 
 		} else {
-			set_tune(TONE_STOP_TUNE);
+			set_tune(tune_control_s::TUNE_ID_STOP);
 		}
 
 		/* reset arm_tune_played when disarmed */
@@ -2479,7 +2477,7 @@ Commander::run()
 		if (!sensor_fail_tune_played && (!status_flags.condition_system_sensors_initialized
 						 && status_flags.condition_system_hotplug_timeout)) {
 
-			set_tune_override(TONE_GPS_WARNING_TUNE);
+			set_tune_override(tune_control_s::TUNE_ID_GPS_WARNING);
 			sensor_fail_tune_played = true;
 			_status_changed = true;
 		}
@@ -4137,14 +4135,9 @@ void Commander::estimator_check(const vehicle_status_flags_s &vstatus_flags)
 		if (run_quality_checks && status.vehicle_type == vehicle_status_s::VEHICLE_TYPE_ROTARY_WING) {
 
 			if (status.arming_state == vehicle_status_s::ARMING_STATE_STANDBY) {
-				// reset flags and timer
-				_time_at_takeoff = hrt_absolute_time();
+				// reset flags
 				_nav_test_failed = false;
 				_nav_test_passed = false;
-
-			} else if (_land_detector.landed) {
-				// record time of takeoff
-				_time_at_takeoff = hrt_absolute_time();
 
 			} else {
 				// if nav status is unconfirmed, confirm yaw angle as passed after 30 seconds or achieving 5 m/s of speed
