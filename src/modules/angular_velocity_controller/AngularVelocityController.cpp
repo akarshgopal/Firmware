@@ -157,6 +157,22 @@ AngularVelocityController::Run()
 			}
 		}
 
+		// Check for updates in attitude
+		if (_att_sub.updated()) {
+			vehicle_attitude_s att;
+
+			if (_att_sub.copy(&att) && PX4_ISFINITE(att.q[0]+att.q[1]+att.q[2]+att.q[3])) {
+				// get attitude of vehicle in quaternion form
+				// TODO: find a better way to check if all q values finite!!
+				_R = Dcmf(Quatf(att.q));
+			}
+		}
+
+		vehicle_attitude_setpoint_s vehicle_attitude_setpoint;
+		if (_att_sp_sub.update(&vehicle_attitude_setpoint)) {
+			_R_sp = Dcmf(Quatf(vehicle_attitude_setpoint.q_d));
+		}
+
 		// check angular acceleration topic
 		vehicle_angular_acceleration_s vehicle_angular_acceleration;
 
@@ -208,7 +224,9 @@ AngularVelocityController::Run()
 			}
 
 			// run rate controller
-			_control.update(angular_velocity, _angular_velocity_sp, _angular_acceleration, dt, _maybe_landed || _landed);
+			//_control.update(angular_velocity, _angular_velocity_sp, _angular_acceleration, dt, _maybe_landed || _landed);
+			// run SO3 controller
+			_control.updateSO3(angular_velocity, _angular_velocity_sp, _angular_acceleration, dt, _maybe_landed || _landed, _R, _R_sp);
 
 			// publish rate controller status
 			rate_ctrl_status_s rate_ctrl_status{};

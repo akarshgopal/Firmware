@@ -67,6 +67,8 @@
 #include <uORB/topics/vehicle_status.h>
 #include <uORB/topics/vehicle_trajectory_waypoint.h>
 #include <uORB/topics/hover_thrust_estimate.h>
+#include <uORB/topics/vehicle_angular_velocity.h>
+#include <uORB/topics/vehicle_attitude.h>
 
 #include "PositionControl/PositionControl.hpp"
 #include "Takeoff/Takeoff.hpp"
@@ -124,6 +126,7 @@ private:
 	uORB::Subscription _att_sub{ORB_ID(vehicle_attitude)};				/**< vehicle attitude */
 	uORB::Subscription _home_pos_sub{ORB_ID(home_position)}; 			/**< home position */
 	uORB::Subscription _hover_thrust_estimate_sub{ORB_ID(hover_thrust_estimate)};
+	uORB::Subscription _omega_sub{ORB_ID(vehicle_angular_velocity)};
 
 	hrt_abstime	_time_stamp_last_loop{0};		/**< time stamp of last loop iteration */
 
@@ -182,10 +185,17 @@ private:
 	control::BlockDerivative _vel_x_deriv; /**< velocity derivative in x */
 	control::BlockDerivative _vel_y_deriv; /**< velocity derivative in y */
 	control::BlockDerivative _vel_z_deriv; /**< velocity derivative in z */
+	control::BlockDerivative _posx_sp_dot;
+	control::BlockDerivative _posy_sp_dot;
+	control::BlockDerivative _posz_sp_dot;
+	control::BlockDerivative _posx_sp_ddot;
+	control::BlockDerivative _posy_sp_ddot;
+	control::BlockDerivative _posz_sp_ddot;
 
 	FlightTasks _flight_tasks; /**< class generating position controller setpoints depending on vehicle task */
 	PositionControl _control; /**< class for core PID position control */
 	PositionControlStates _states{}; /**< structure containing vehicle state information for position control */
+	PositionControlSetpoint _tracking_setpoint{};
 
 	hrt_abstime _last_warn = 0; /**< timer when the last warn message was sent out */
 
@@ -288,6 +298,13 @@ MulticopterPositionControl::MulticopterPositionControl(bool vtol) :
 	_vel_x_deriv(this, "VELD"),
 	_vel_y_deriv(this, "VELD"),
 	_vel_z_deriv(this, "VELD"),
+	_posx_sp_dot(this, "VELD"),
+	_posy_sp_dot(this, "VELD"),
+	_posz_sp_dot(this, "VELD"),
+	_posx_sp_ddot(this, "VELD"),
+	_posy_sp_ddot(this, "VELD"),
+	_posz_sp_ddot(this, "VELD"),
+
 	_cycle_perf(perf_alloc(PC_ELAPSED, MODULE_NAME": cycle time"))
 {
 	if (vtol) {
@@ -428,6 +445,18 @@ MulticopterPositionControl::poll_subscriptions()
 
 		if (_att_sub.copy(&att) && PX4_ISFINITE(att.q[0])) {
 			_states.yaw = Eulerf(Quatf(att.q)).psi();
+			// get attitude of vehicle in quaternion form
+			// TODO: check if all q values finite!!
+			_states.R = Dcmf(Quatf(att.q));
+		}
+	}
+
+	if (_omega_sub.updated()){
+		vehicle_angular_velocity_s omega;
+
+		if (_omega_sub.copy(&omega) && PX4_ISFINITE(omega.xyz[0]+omega.xyz[1]+omega.xyz[2])){
+			_states.angular_velocity = matrix::Vector3f(omega.xyz);
+
 		}
 	}
 
@@ -512,6 +541,7 @@ MulticopterPositionControl::set_vehicle_states(const float &vel_sp_z)
 		// reset derivative to prevent acceleration spikes when regaining velocity
 		_vel_z_deriv.reset();
 	}
+
 }
 
 int
@@ -595,6 +625,15 @@ MulticopterPositionControl::Run()
 			} else {
 				setpoint = _flight_tasks.getPositionSetpoint();
 				constraints = _flight_tasks.getConstraints();
+				_tracking_setpoint.pos_sp(0) = setpoint.x;
+				_tracking_setpoint.pos_sp(1) = setpoint.y;
+				_tracking_setpoint.pos_sp(2) = setpoint.z;
+				_tracking_setpoint.vel_sp(0) = _posx_sp_dot.update(setpoint.x);
+				_tracking_setpoint.vel_sp(1) = _posy_sp_dot.update(setpoint.y);
+				_tracking_setpoint.vel_sp(2) = _posz_sp_dot.update(setpoint.z);
+				_tracking_setpoint.acc_sp(0) = _posx_sp_ddot.update(_tracking_setpoint.vel_sp(0));
+				_tracking_setpoint.acc_sp(1) = _posy_sp_ddot.update(_tracking_setpoint.vel_sp(1));
+				_tracking_setpoint.acc_sp(2) = _posz_sp_ddot.update(_tracking_setpoint.vel_sp(2));
 
 				_failsafe_land_hysteresis.set_state_and_update(false, time_stamp_now);
 			}
@@ -661,7 +700,13 @@ MulticopterPositionControl::Run()
 			// Run position control
 			_control.setState(_states);
 			_control.setConstraints(constraints);
-			_control.setInputSetpoint(setpoint);
+			
+			if(_control._use3DThrust){
+				_control.setTrackingSetpoint(_tracking_setpoint);
+			}
+			else{
+				_control.setInputSetpoint(setpoint);
+			}
 
 			if (!_control.update(_dt)) {
 				warn_rate_limited("PositionControl: invalid setpoints");
@@ -721,6 +766,12 @@ MulticopterPositionControl::Run()
 			_vel_x_deriv.reset();
 			_vel_y_deriv.reset();
 			_vel_z_deriv.reset();
+			_posx_sp_dot.reset();
+			_posy_sp_dot.reset();
+			_posz_sp_dot.reset();
+			_posx_sp_ddot.reset();
+			_posy_sp_ddot.reset();
+			_posz_sp_ddot.reset();
 		}
 	}
 

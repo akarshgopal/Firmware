@@ -60,6 +60,8 @@
 #include <uORB/topics/vehicle_status.h>
 #include <uORB/topics/vehicle_thrust_setpoint.h>
 #include <uORB/topics/vehicle_torque_setpoint.h>
+#include <uORB/topics/vehicle_attitude.h>
+#include <uORB/topics/vehicle_attitude_setpoint.h>
 
 
 class AngularVelocityController : public ModuleBase<AngularVelocityController>, public ModuleParams,
@@ -110,6 +112,8 @@ private:
 	uORB::Subscription _vehicle_rates_setpoint_sub{ORB_ID(vehicle_rates_setpoint)};			/**< vehicle rates setpoint subscription */
 	uORB::Subscription _vehicle_status_sub{ORB_ID(vehicle_status)};					/**< vehicle status subscription */
 	uORB::Subscription _hover_thrust_estimate_sub{ORB_ID(hover_thrust_estimate)};
+	uORB::Subscription _att_sub{ORB_ID(vehicle_attitude)};
+	uORB::Subscription _att_sp_sub{ORB_ID(vehicle_attitude_setpoint)};	
 
 	uORB::SubscriptionCallbackWorkItem _vehicle_angular_velocity_sub{this, ORB_ID(vehicle_angular_velocity)};
 
@@ -131,6 +135,8 @@ private:
 	matrix::Vector3f _angular_velocity_sp;		/**< angular velocity setpoint */
 	matrix::Vector3f _angular_acceleration;		/**< angular acceleration (estimated) */
 	matrix::Vector3f _thrust_sp;			/**< thrust setpoint */
+	matrix::Dcmf _R;
+	matrix::Dcmf _R_sp;
 
 	float _hover_thrust{0.5f};			/**< Normalized hover thrust **/
 

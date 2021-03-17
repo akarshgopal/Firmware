@@ -54,6 +54,15 @@ namespace ControlMath
 void thrustToAttitude(const matrix::Vector3f &thr_sp, const float yaw_sp, vehicle_attitude_setpoint_s &att_sp);
 
 /**
+ * Passes through 3D thrust vector and uses yaw set-point to set a desired attitude.
+ * @param thr_sp desired 3D thrust vector
+ * @param yaw_sp the desired yaw
+ * @param att_sp attitude setpoint to fill
+ */
+void thrust3DandAttitudeSP(const matrix::Vector3f &thr_sp, const float yaw_sp, vehicle_attitude_setpoint_s &att_sp);
+
+
+/**
  * Limits the tilt angle between two unit vectors
  * @param body_unit unit vector that will get adjusted if angle is too big
  * @param world_unit fixed vector to measure the angle against

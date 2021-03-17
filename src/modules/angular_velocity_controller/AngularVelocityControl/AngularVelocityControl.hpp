@@ -98,6 +98,11 @@ public:
 	void update(const matrix::Vector3f &angular_velocity, const matrix::Vector3f &angular_velocity_sp,
 		    const matrix::Vector3f &angular_acceleration, const float dt, const bool landed);
 
+	void updateSO3(const matrix::Vector3f &angular_velocity, const matrix::Vector3f &angular_velocity_sp,
+				    const matrix::Vector3f &angular_acceleration, const float dt, const bool landed, const matrix::Dcmf &R, const matrix::Dcmf &R_sp);
+
+	
+	
 	/**
 	 * Get the desired angular acceleration
 	 * @see _angular_accel_sp

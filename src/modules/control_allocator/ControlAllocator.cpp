@@ -235,6 +235,10 @@ ControlAllocator::update_effectiveness_source()
 		case EffectivenessSource::TILTROTOR_VTOL:
 			tmp = new ActuatorEffectivenessTiltrotorVTOL();
 			break;
+		
+		case EffectivenessSource::OMNIROTOR:
+			tmp = new ActuatorEffectivenessOmnirotor();
+			break;
 
 		default:
 			PX4_ERR("Unknown airframe");
@@ -259,7 +263,8 @@ ControlAllocator::update_effectiveness_source()
 
 			// Swap effectiveness sources
 			if (_actuator_effectiveness != nullptr) {
-				free(_actuator_effectiveness);
+				//free(_actuator_effectiveness);
+				delete _actuator_effectiveness;
 			}
 
 			_actuator_effectiveness = tmp;
@@ -397,13 +402,22 @@ ControlAllocator::Run()
 		_control_allocation->allocate();
 
 		// Publish actuator setpoint and allocator status
-		publish_actuator_setpoint();
-		publish_control_allocator_status();
+		// add logic for overactuated UAVs - if overactuated needs to decompose into rotor and tilt commands else carry on.
+		if((int)_effectiveness_source_id == 3){
+			publish_actuator_setpoint_omnirotor();
+			// publishing status w/o decomposing actuator_sp
+			publish_control_allocator_status();
+			publish_legacy_actuator_controls_omnirotor();
+		}
+		else{
+			publish_actuator_setpoint();
+			publish_control_allocator_status();
 
-		// Publish on legacy topics for compatibility with
-		// the current mixer system and multicopter controller
-		// TODO: remove
-		publish_legacy_actuator_controls();
+			// Publish on legacy topics for compatibility with
+			// the current mixer system and multicopter controller
+			// TODO: remove
+			publish_legacy_actuator_controls();
+		}
 	}
 
 	perf_end(_loop_perf);
@@ -418,6 +432,36 @@ ControlAllocator::publish_actuator_setpoint()
 	vehicle_actuator_setpoint.timestamp = hrt_absolute_time();
 	vehicle_actuator_setpoint.timestamp_sample = _timestamp_sample;
 	actuator_sp.copyTo(vehicle_actuator_setpoint.actuator);
+
+	_vehicle_actuator_setpoint_pub.publish(vehicle_actuator_setpoint);
+}
+
+void
+ControlAllocator::publish_actuator_setpoint_omnirotor()
+{
+	//extended actuator vector
+	matrix::Vector<float, NUM_ACTUATORS> ext_actuator_sp = _control_allocation->getActuatorSetpoint();
+	// storage for recovered actuator sp
+	matrix::Vector<float, NUM_ACTUATORS> actuator_sp;
+
+	// decompose actuator setpoints to rotor speeds and angles
+	for(int i=0; i<NUM_ACTUATORS/2;i++){
+		actuator_sp(i) = sqrt(ext_actuator_sp(2*i)*ext_actuator_sp(2*i)+ext_actuator_sp(2*i+1)*ext_actuator_sp(2*i+1));
+		actuator_sp(i+NUM_ACTUATORS/2) = atan2(ext_actuator_sp(2*i),ext_actuator_sp(2*i+1));
+	}
+
+	vehicle_actuator_setpoint_s vehicle_actuator_setpoint{};
+	vehicle_actuator_setpoint.timestamp = hrt_absolute_time();
+	vehicle_actuator_setpoint.timestamp_sample = _timestamp_sample;
+	
+	//TODO: Normalise actuator sps
+	matrix::Vector<float, NUM_ACTUATORS> actuator_sp_normalized = _control_allocation->normalizeActuatorSetpoint(
+				actuator_sp);
+	actuator_sp_normalized.copyTo(vehicle_actuator_setpoint.actuator);
+	
+	for (size_t i = 0; i < 16; i++) {
+		vehicle_actuator_setpoint.actuator[i] = (PX4_ISFINITE(actuator_sp_normalized(i))) ? actuator_sp_normalized(i) : 0.0f;
+		}
 
 	_vehicle_actuator_setpoint_pub.publish(vehicle_actuator_setpoint);
 }
@@ -494,6 +538,41 @@ ControlAllocator::publish_legacy_actuator_controls()
 	_actuator_controls_5_pub.publish(actuator_controls_5);
 }
 
+void
+ControlAllocator::publish_legacy_actuator_controls_omnirotor()
+{
+	// For compatibility with the current mixer system,
+	// publish normalized version on actuator_controls_4/5
+	actuator_controls_s actuator_controls_4{};
+	actuator_controls_s actuator_controls_5{};
+	actuator_controls_4.timestamp = hrt_absolute_time();
+	actuator_controls_5.timestamp = hrt_absolute_time();
+	actuator_controls_4.timestamp_sample = _timestamp_sample;
+	actuator_controls_5.timestamp_sample = _timestamp_sample;
+
+	//extended actuator vector
+	matrix::Vector<float, NUM_ACTUATORS> ext_actuator_sp = _control_allocation->getActuatorSetpoint();
+	// storage for recovered actuator sp
+	matrix::Vector<float, NUM_ACTUATORS> actuator_sp;
+
+	// decompose actuator setpoints to rotor speeds and angles
+	for(int i=0; i<NUM_ACTUATORS/2;i++){
+		actuator_sp(i) = sqrt(ext_actuator_sp(2*i)*ext_actuator_sp(2*i)+ext_actuator_sp(2*i+1)*ext_actuator_sp(2*i+1)); // no sqrt used
+		actuator_sp(i+NUM_ACTUATORS/2) = atan2(ext_actuator_sp(2*i),ext_actuator_sp(2*i+1));
+	}
+
+	matrix::Vector<float, NUM_ACTUATORS> actuator_sp_normalized = _control_allocation->normalizeActuatorSetpoint(
+				actuator_sp);
+
+	for (size_t i = 0; i < 8; i++) {
+		actuator_controls_4.control[i] = (PX4_ISFINITE(actuator_sp_normalized(i))) ? actuator_sp_normalized(i) : 0.0f;
+		actuator_controls_5.control[i] = (PX4_ISFINITE(actuator_sp_normalized(i + 8))) ? actuator_sp_normalized(i + 8) : 0.0f;
+	}
+
+	_actuator_controls_4_pub.publish(actuator_controls_4);
+	_actuator_controls_5_pub.publish(actuator_controls_5);
+}
+
 int ControlAllocator::task_spawn(int argc, char *argv[])
 {
 	ControlAllocator *instance = new ControlAllocator();
@@ -553,6 +632,11 @@ int ControlAllocator::print_status()
 	case EffectivenessSource::TILTROTOR_VTOL:
 		PX4_INFO("EffectivenessSource: Tiltrotor VTOL");
 		break;
+
+	case EffectivenessSource::OMNIROTOR:
+		PX4_INFO("EffectivenessSource: Omnirotor");
+		break;
+
 	}
 
 	// Print current effectiveness matrix

@@ -1,0 +1,87 @@
+#!/bin/sh
+#
+# @name Saxion M4E TiltRotor
+#
+# @type Hexarotor x
+#
+
+sh /etc/init.d/rc.mc_defaults
+sh /etc/init.d/rc.ctrlalloc
+
+if [ $AUTOCNF = yes ]
+then
+
+	param set MPC_USE_HTE 0
+
+	param set VM_MASS 8.0
+	param set VM_INERTIA_XX 0.044
+	param set VM_INERTIA_YY 0.06
+	param set VM_INERTIA_ZZ 0.084
+
+	param set CA_AIRFRAME 3
+	param set CA_METHOD 0
+	param set CA_ACT0_MIN 0.0
+	param set CA_ACT1_MIN 0.0
+	param set CA_ACT2_MIN 0.0
+	param set CA_ACT3_MIN 0.0
+	param set CA_ACT4_MIN 0.0
+	param set CA_ACT5_MIN 0.0
+	param set CA_ACT6_MIN 0.0
+	param set CA_ACT7_MIN 0.0
+	param set CA_ACT0_MAX 1.0
+	param set CA_ACT1_MAX 1.0
+	param set CA_ACT2_MAX 1.0
+	param set CA_ACT3_MAX 1.0
+	param set CA_ACT4_MAX 1.0
+	param set CA_ACT5_MAX 1.0
+	param set CA_ACT6_MAX 1.0
+	param set CA_ACT7_MAX 1.0
+
+	param set CA_ACT8_MIN -1.0
+	param set CA_ACT9_MIN -1.0
+	param set CA_ACT10_MIN -1.0
+	param set CA_ACT11_MIN -1.0
+	param set CA_ACT12_MIN -1.0
+	param set CA_ACT13_MIN -1.0
+	param set CA_ACT14_MIN -1.0
+	param set CA_ACT15_MIN -1.0
+	param set CA_ACT8_MAX 1.0
+	param set CA_ACT9_MAX 1.0
+	param set CA_ACT10_MAX 1.0
+	param set CA_ACT11_MAX 1.0
+	param set CA_ACT12_MAX 1.0
+	param set CA_ACT13_MAX 1.0
+	param set CA_ACT14_MAX 1.0
+	param set CA_ACT15_MAX 1.0
+
+
+	param set CA_MC_R5_PX 0.0
+	param set CA_MC_R5_PY 1.0
+	param set CA_MC_R5_CT 8
+	param set CA_MC_R5_KM -0.05
+	param set CA_MC_R4_PX 0.0
+	param set CA_MC_R4_PY -1.0
+	param set CA_MC_R4_CT 8
+	param set CA_MC_R4_KM 0.05
+	param set CA_MC_R3_PX 0.866025
+	param set CA_MC_R3_PY -0.5
+	param set CA_MC_R3_CT 8
+	param set CA_MC_R3_KM -0.05
+	param set CA_MC_R2_PX -0.866025
+	param set CA_MC_R2_PY 0.5
+	param set CA_MC_R2_CT 8
+	param set CA_MC_R2_KM 0.05
+	param set CA_MC_R1_PX 0.866025
+	param set CA_MC_R1_PY 0.5
+	param set CA_MC_R1_CT 8
+	param set CA_MC_R1_KM 0.05
+	param set CA_MC_R0_PX -0.866025
+	param set CA_MC_R0_PY -0.5
+	param set CA_MC_R0_CT 8
+	param set CA_MC_R0_KM -0.05
+fi
+
+set MAV_TYPE 13
+
+# set MIXER hexa_x
+set MIXER direct

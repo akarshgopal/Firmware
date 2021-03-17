@@ -46,10 +46,11 @@
  * This is used to retrieve pre-computed control effectiveness matrix
  *
  * @min 0
- * @max 2
+ * @max 3
  * @value 0 Multirotor
  * @value 1 Standard VTOL (WIP)
  * @value 2 Tiltrotor VTOL (WIP)
+ * @value 3 Omnirotor (WIP)
  * @group Control Allocation
  */
 PARAM_DEFINE_INT32(CA_AIRFRAME, 0);

@@ -50,6 +50,18 @@ void thrustToAttitude(const Vector3f &thr_sp, const float yaw_sp, vehicle_attitu
 	att_sp.thrust_body[2] = -thr_sp.length();
 }
 
+/*
+sets thrust setpoint in att_sp, and sets attittude setpoint to level pitch and roll, while orienting body x to
+heading x 
+*/
+void thrust3DandAttitudeSP(const Vector3f &thr_sp, const float yaw_sp, vehicle_attitude_setpoint_s &att_sp)
+{
+	(thr_sp).copyTo(att_sp.thrust_body);
+	//att_sp.thrust_body[2] = -thr_sp.length();
+	Vector3f body_z = {0.0,0.0,0.0};
+	bodyzToAttitude(body_z, yaw_sp, att_sp);
+}
+
 void limitTilt(Vector3f &body_unit, const Vector3f &world_unit, const float max_angle)
 {
 	// determine tilt

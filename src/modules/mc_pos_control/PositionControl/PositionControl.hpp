@@ -40,17 +40,26 @@
 #pragma once
 
 #include <matrix/matrix/math.hpp>
+#include <lib/controllib/blocks.hpp>
 #include <uORB/topics/vehicle_attitude_setpoint.h>
 #include <uORB/topics/vehicle_constraints.h>
 #include <uORB/topics/vehicle_local_position_setpoint.h>
+#include <uORB/topics/vehicle_angular_velocity.h>
 
 struct PositionControlStates {
 	matrix::Vector3f position;
 	matrix::Vector3f velocity;
 	matrix::Vector3f acceleration;
+	matrix::Dcmf R;
+	matrix::Vector3f angular_velocity;
 	float yaw;
 };
 
+struct PositionControlSetpoint{
+	matrix::Vector3f pos_sp;
+	matrix::Vector3f vel_sp;
+	matrix::Vector3f acc_sp;
+};
 /**
  * 	Core Position-Control for MC.
  * 	This class contains P-controller for position and
@@ -77,6 +86,7 @@ public:
 
 	PositionControl() = default;
 	~PositionControl() = default;
+	bool _use3DThrust = true;
 
 	/**
 	 * Set the position control gains
@@ -140,6 +150,13 @@ public:
 	void setInputSetpoint(const vehicle_local_position_setpoint_s &setpoint);
 
 	/**
+	 * Pass the desired setpoints
+	 * Note: NAN value means no feed forward/leave state uncontrolled if there's no higher order setpoint.
+	 * @param setpoint a vehicle_local_position_setpoint_s structure
+	 */
+	void setTrackingSetpoint(const PositionControlSetpoint &setpoint);
+
+	/**
 	 * Pass constraints that are stricter than the global limits
 	 * Note: NAN value means no constraint, take maximum limit of controller.
 	 * @param constraints a PositionControl structure with supported constraints
@@ -185,7 +202,7 @@ private:
 	void _positionControl(); ///< Position proportional control
 	void _velocityControl(const float dt); ///< Velocity PID control
 	void _accelerationControl(); ///< Acceleration setpoint processing
-
+	void _trackingControl(const float dt); ///Bodie et al.(2018) tracking controller
 	// Gains
 	matrix::Vector3f _gain_pos_p; ///< Position control proportional gain
 	matrix::Vector3f _gain_vel_p; ///< Velocity control proportional gain
@@ -208,6 +225,9 @@ private:
 	matrix::Vector3f _vel_dot; /**< velocity derivative (replacement for acceleration estimate) */
 	matrix::Vector3f _vel_int; /**< integral term of the velocity controller */
 	float _yaw{}; /**< current heading */
+	matrix::Vector3f _angular_vel; /**<angular velocity */
+	matrix::Dcmf _R; /**< rotation matrix attitude */
+
 
 	vehicle_constraints_s _constraints{}; /**< variable constraints */
 
@@ -216,6 +236,9 @@ private:
 	matrix::Vector3f _vel_sp; /**< desired velocity */
 	matrix::Vector3f _acc_sp; /**< desired acceleration */
 	matrix::Vector3f _thr_sp; /**< desired thrust */
+
 	float _yaw_sp{}; /**< desired heading */
 	float _yawspeed_sp{}; /** desired yaw-speed */
+
+	
 };

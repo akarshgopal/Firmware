@@ -45,6 +45,8 @@
 #include <ActuatorEffectivenessMultirotor.hpp>
 #include <ActuatorEffectivenessStandardVTOL.hpp>
 #include <ActuatorEffectivenessTiltrotorVTOL.hpp>
+#include <ActuatorEffectivenessOmnirotor.hpp>
+
 
 #include <ControlAllocation.hpp>
 #include <ControlAllocationPseudoInverse.hpp>
@@ -106,9 +108,11 @@ private:
 	void update_effectiveness_source();
 
 	void publish_actuator_setpoint();
+	void publish_actuator_setpoint_omnirotor();
 	void publish_control_allocator_status();
 
 	void publish_legacy_actuator_controls();
+	void publish_legacy_actuator_controls_omnirotor();
 	void publish_legacy_multirotor_motor_limits();
 
 	enum class AllocationMethod {
@@ -125,6 +129,7 @@ private:
 		MULTIROTOR = 0,
 		STANDARD_VTOL = 1,
 		TILTROTOR_VTOL = 2,
+		OMNIROTOR = 3,
 	};
 
 	EffectivenessSource _effectiveness_source_id{EffectivenessSource::NONE};
@@ -136,7 +141,7 @@ private:
 
 	// Outputs
 	uORB::Publication<vehicle_actuator_setpoint_s>	_vehicle_actuator_setpoint_pub{ORB_ID(vehicle_actuator_setpoint)};	/**< actuator setpoint publication */
-	uORB::Publication<control_allocator_status_s>	_control_allocator_status_pub{ORB_ID(control_allocator_status)};	/**< actuator setpoint publication */
+	uORB::Publication<control_allocator_status_s>	_control_allocator_status_pub{ORB_ID(control_allocator_status)};	/**< control allocator status publication */
 
 	// actuator_controls publication handles (temporary hack to plug actuator_setpoint into the mixer system)
 	uORB::Publication<actuator_controls_s>	_actuator_controls_4_pub{ORB_ID(actuator_controls_4)};	/**< actuator controls 4 publication */
