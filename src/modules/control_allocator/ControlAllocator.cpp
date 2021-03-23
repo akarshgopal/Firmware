@@ -457,12 +457,13 @@ ControlAllocator::publish_actuator_setpoint_omnirotor()
 	//TODO: Normalise actuator sps
 	matrix::Vector<float, NUM_ACTUATORS> actuator_sp_normalized = _control_allocation->normalizeActuatorSetpoint(
 				actuator_sp);
-	actuator_sp_normalized.copyTo(vehicle_actuator_setpoint.actuator);
+
 	
 	for (size_t i = 0; i < 16; i++) {
 		vehicle_actuator_setpoint.actuator[i] = (PX4_ISFINITE(actuator_sp_normalized(i))) ? actuator_sp_normalized(i) : 0.0f;
 		}
 
+	//actuator_sp_normalized.copyTo(vehicle_actuator_setpoint.actuator);
 	_vehicle_actuator_setpoint_pub.publish(vehicle_actuator_setpoint);
 }
 
