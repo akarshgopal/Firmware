@@ -98,5 +98,5 @@ fi
 set MIXER direct
 set PWM_OUT 123456
 
-set MIXER_AUX direct_aux
-set PWM_AUX_OUT 123456
+set MIXER_AUX direct
+# set PWM_AUX_OUT 123456
