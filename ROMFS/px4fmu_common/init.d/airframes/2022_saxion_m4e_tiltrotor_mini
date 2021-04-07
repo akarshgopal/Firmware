@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# @name Saxion M4E TiltRotor
+# @name Saxion M4E TiltRotor-Mini
 #
 # @type Hexarotor x
 # @class Copter
@@ -12,12 +12,13 @@
 # @output MAIN5 motor 5
 # @output MAIN6 motor 6
 #
-# @output AUX1 feed-through of RC AUX1 channel
-# @output AUX2 feed-through of RC AUX2 channel
-# @output AUX3 feed-through of RC AUX3 channel
-# @output AUX4 feed-through of RC AUX4 channel
-# @output AUX5 feed-through of RC AUX5 channel
-# @output AUX6 feed-through of RC AUX6 channel
+# @output AUX1 servo 1
+# @output AUX2 servo 2
+# @output AUX3 servo 3
+# @output AUX4 servo 4
+# @output AUX5 servo 5
+# @output AUX6 servo 6
+
 
 sh /etc/init.d/rc.mc_defaults
 sh /etc/init.d/rc.ctrlalloc
@@ -98,5 +99,5 @@ fi
 set MIXER direct
 set PWM_OUT 123456
 
-set MIXER_AUX direct
-# set PWM_AUX_OUT 123456
+#set MIXER_AUX direct
+set PWM_AUX_OUT 123456
