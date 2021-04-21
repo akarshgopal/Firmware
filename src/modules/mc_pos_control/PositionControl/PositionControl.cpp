@@ -155,15 +155,14 @@ void PositionControl::_trackingControl(const float dt)
 	_acc_sp(0) = math::constrain(_acc_sp(0), -CONSTANTS_ONE_G*0.15f, CONSTANTS_ONE_G*0.15f);
 	_acc_sp(1) = math::constrain(_acc_sp(1), -CONSTANTS_ONE_G*0.15f, CONSTANTS_ONE_G*0.15f);
 	_acc_sp(2) = math::constrain(_acc_sp(2), -CONSTANTS_ONE_G, CONSTANTS_ONE_G);
-	//Vector3f pos_error = (_pos - _pos_sp);
 	Vector3f pos_gains = Vector3f(10,10,16.0);
 	Vector3f vel_gains = Vector3f(4.0,4.0,8.0);
 
 	_thr_sp = Vector3f(
 			_R.transpose()*(
 				(- (_pos - _pos_sp).emult(pos_gains) //(_gain_pos_p)
-				- (_vel - 0.0f*_vel_sp).emult(vel_gains) //(_gain_vel_p)
-				+ 0.0f*_acc_sp)*_hover_thrust/CONSTANTS_ONE_G - Vector3f(0.0,0.0,_hover_thrust)
+				- (_vel - _vel_sp).emult(vel_gains) //(_gain_vel_p)
+				+ _acc_sp)*_hover_thrust/CONSTANTS_ONE_G - Vector3f(0.0,0.0,_hover_thrust)
 			) 
 			+ _angular_vel.cross((_R.transpose())*(_vel))*_hover_thrust/CONSTANTS_ONE_G
 			);
