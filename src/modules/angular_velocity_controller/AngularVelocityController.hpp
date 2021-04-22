@@ -141,6 +141,7 @@ private:
 	float _hover_thrust{0.5f};			/**< Normalized hover thrust **/
 
 	bool _gear_state_initialized{false};		/**< true if the gear state has been initialized */
+	bool _use_so3{false};
 
 	hrt_abstime _task_start{hrt_absolute_time()};
 	hrt_abstime _last_run{0};
@@ -177,7 +178,11 @@ private:
 		(ParamFloat<px4::params::VM_INERTIA_YZ>) _param_vm_inertia_yz,
 
 		(ParamFloat<px4::params::MPC_THR_HOVER>) _param_mpc_thr_hover,
-		(ParamBool<px4::params::MPC_USE_HTE>) _param_mpc_use_hte
+		(ParamBool<px4::params::MPC_USE_HTE>) _param_mpc_use_hte,
+		(ParamBool<px4::params::USE_SO3_CTRL>) _param_use_so3_ctrl,
+		(ParamFloat<px4::params::SO3_RX_P>) _param_so3_x_p,
+		(ParamFloat<px4::params::SO3_RY_P>) _param_so3_y_p,
+		(ParamFloat<px4::params::SO3_RZ_P>) _param_so3_z_p
 	)
 
 };

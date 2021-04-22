@@ -47,6 +47,10 @@ void AngularVelocityControl::setGains(const Vector3f &P, const Vector3f &I, cons
 	_gain_d = D;
 }
 
+void AngularVelocityControl::setSO3Gains(const matrix::Vector3f &P){
+	_gain_R_p = P;
+}
+
 void AngularVelocityControl::setSaturationStatus(const matrix::Vector<bool, 3> &saturation_positive,
 		const matrix::Vector<bool, 3> &saturation_negative)
 {
@@ -78,11 +82,11 @@ void AngularVelocityControl::update(const Vector3f &angular_velocity, const Vect
 void AngularVelocityControl::updateSO3(const Vector3f &angular_velocity, const Vector3f &angular_velocity_sp,
 				    const Vector3f &angular_acceleration, const float dt, const bool landed, const Dcmf &R, const Dcmf &R_sp)
 {
-	Vector3f k_r = Vector3f(32,32,15); // ~(36,30) works for underactuated
-	Vector3f k_w = Vector3f(28,28,15); // ~(36,32) barely works for overactuated
+	//Vector3f k_r = Vector3f(32,32,25); // ~(36,30) works for underactuated
+	//Vector3f k_w = Vector3f(28,28,28); // ~(36,32) barely works for overactuated
 	_torque_sp = _inertia*(
-					- ((Dcmf(R_sp.transpose()*R - R.transpose()*R_sp).vee())/2).emult(k_r) 
-					- (angular_velocity - R.transpose()*R_sp*angular_velocity_sp).emult(k_w)
+					- ((Dcmf(R_sp.transpose()*R - R.transpose()*R_sp).vee())/2).emult(_gain_R_p) 
+					- (angular_velocity - R.transpose()*R_sp*0*angular_velocity_sp).emult(_gain_p)
 				)
 				+ angular_velocity.cross(_inertia * angular_velocity);
 }

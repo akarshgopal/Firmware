@@ -301,3 +301,51 @@ PARAM_DEFINE_FLOAT(AVC_Z_FF, 0.0f);
  * @group Angular Velocity Control
  */
 PARAM_DEFINE_FLOAT(AVC_Z_K, 1.0f);
+
+/**
+ * Use SO3 Control instead of stock PX4 attitude+rate control.
+ *
+ * Specifies the controller to be used.
+ *
+ * @min 0
+ * @max 1
+ * @value 0 use PX4 att ctrl, and avc
+ * @value 1 use SO3 CTRL
+
+ */
+PARAM_DEFINE_INT32(USE_SO3_CTRL, 0);
+
+/**
+ * SO3 Control attitude X P gain.
+ *
+ * @min 0
+ * @max 100
+ * @decimal 1
+ * @increment 0.1
+ * @group SO3 Control
+ */
+PARAM_DEFINE_FLOAT(SO3_RX_P, 32.0f);
+
+
+/**
+ * SO3 Control attitude Y P gain.
+ *
+ * @min 0
+ * @max 100
+ * @decimal 1
+ * @increment 0.1
+ * @group SO3 Control
+ */
+PARAM_DEFINE_FLOAT(SO3_RY_P, 32.0f);
+
+
+/**
+ * SO3 Control attitude Z P gain.
+ *
+ * @min 0
+ * @max 100 
+ * @decimal 1
+ * @increment 0.1
+ * @group SO3 Control
+ */
+PARAM_DEFINE_FLOAT(SO3_RZ_P, 25.0f);

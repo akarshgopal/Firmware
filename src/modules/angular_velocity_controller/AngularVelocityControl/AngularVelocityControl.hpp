@@ -58,6 +58,12 @@ public:
 	void setGains(const matrix::Vector3f &P, const matrix::Vector3f &I, const matrix::Vector3f &D);
 
 	/**
+	 * Set the control gains
+	 * @param P 3D vector of proportional gains for body x,y,z axis
+	 */
+	void setSO3Gains(const matrix::Vector3f &P);
+
+	/**
 	 * Set the mximum absolute value of the integrator for all axes
 	 * @param integrator_limit limit value for all axes x, y, z
 	 */
@@ -142,7 +148,8 @@ private:
 	matrix::Vector3f _lim_int; ///< integrator term maximum absolute value
 	matrix::Vector3f _gain_ff; ///< direct angular velocity to torque feed forward gain
 	matrix::Matrix3f _inertia{matrix::eye<float, 3>()}; ///< inertia matrix
-
+	matrix::Vector3f _gain_R_p; ///< proportional gain in SO3 control for all axes x,y,z
+	
 	// States
 	matrix::Vector3f _angular_velocity_int;
 	matrix::Vector<bool, 3> _saturation_positive;

@@ -86,7 +86,7 @@ public:
 
 	PositionControl() = default;
 	~PositionControl() = default;
-	bool _use3DThrust = true;
+	bool _use3DThrust = false;
 
 	/**
 	 * Set the position control gains

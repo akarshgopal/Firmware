@@ -52,22 +52,22 @@ then
 	param set CA_ACT6_MAX 1.0
 	param set CA_ACT7_MAX 1.0
 
-	param set CA_ACT8_MIN -1.0
-	param set CA_ACT9_MIN -1.0
-	param set CA_ACT10_MIN -1.0
-	param set CA_ACT11_MIN -1.0
-	param set CA_ACT12_MIN -1.0
-	param set CA_ACT13_MIN -1.0
-	param set CA_ACT14_MIN -1.0
-	param set CA_ACT15_MIN -1.0
-	param set CA_ACT8_MAX 1.0
-	param set CA_ACT9_MAX 1.0
-	param set CA_ACT10_MAX 1.0
-	param set CA_ACT11_MAX 1.0
-	param set CA_ACT12_MAX 1.0
-	param set CA_ACT13_MAX 1.0
-	param set CA_ACT14_MAX 1.0
-	param set CA_ACT15_MAX 1.0
+	param set CA_ACT8_MIN -0.785
+	param set CA_ACT9_MIN -0.785
+	param set CA_ACT10_MIN -0.785
+	param set CA_ACT11_MIN -0.785
+	param set CA_ACT12_MIN -0.785
+	param set CA_ACT13_MIN -0.785
+	param set CA_ACT14_MIN -0.785
+	param set CA_ACT15_MIN -0.785
+	param set CA_ACT8_MAX 0.785
+	param set CA_ACT9_MAX 0.785
+	param set CA_ACT10_MAX 0.785
+	param set CA_ACT11_MAX 0.785
+	param set CA_ACT12_MAX 0.785
+	param set CA_ACT13_MAX 0.785
+	param set CA_ACT14_MAX 0.785
+	param set CA_ACT15_MAX 0.785
 
 
 	param set CA_MC_R5_PX 0.0
@@ -99,5 +99,5 @@ fi
 set MIXER direct
 set PWM_OUT 123456
 
-#set MIXER_AUX direct
+set MIXER_AUX direct
 set PWM_AUX_OUT 123456

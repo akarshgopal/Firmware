@@ -52,22 +52,22 @@ then
 	param set CA_ACT6_MAX 1.0
 	param set CA_ACT7_MAX 1.0
 
-	param set CA_ACT8_MIN -1.0
-	param set CA_ACT9_MIN -1.0
-	param set CA_ACT10_MIN -1.0
-	param set CA_ACT11_MIN -1.0
-	param set CA_ACT12_MIN -1.0
-	param set CA_ACT13_MIN -1.0
-	param set CA_ACT14_MIN -1.0
-	param set CA_ACT15_MIN -1.0
-	param set CA_ACT8_MAX 1.0
-	param set CA_ACT9_MAX 1.0
-	param set CA_ACT10_MAX 1.0
-	param set CA_ACT11_MAX 1.0
-	param set CA_ACT12_MAX 1.0
-	param set CA_ACT13_MAX 1.0
-	param set CA_ACT14_MAX 1.0
-	param set CA_ACT15_MAX 1.0
+	param set CA_ACT8_MIN -3.142
+	param set CA_ACT9_MIN -3.142
+	param set CA_ACT10_MIN -3.142
+	param set CA_ACT11_MIN -3.142
+	param set CA_ACT12_MIN -3.142
+	param set CA_ACT13_MIN -3.142
+	param set CA_ACT14_MIN -3.142
+	param set CA_ACT15_MIN -3.142
+	param set CA_ACT8_MAX 3.142
+	param set CA_ACT9_MAX 3.142
+	param set CA_ACT10_MAX 3.142
+	param set CA_ACT11_MAX 3.142
+	param set CA_ACT12_MAX 3.142
+	param set CA_ACT13_MAX 3.142
+	param set CA_ACT14_MAX 3.142
+	param set CA_ACT15_MAX 3.142
 
 
 	param set CA_MC_R5_PX 0.0

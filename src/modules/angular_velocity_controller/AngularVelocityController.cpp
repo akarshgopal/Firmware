@@ -99,6 +99,11 @@ AngularVelocityController::parameters_updated()
 	if (!_param_mpc_use_hte.get()) {
 		_hover_thrust = _param_mpc_thr_hover.get();
 	}
+
+	// Controller
+	if (!_param_use_so3_ctrl.get()){
+		_use_so3 = _param_use_so3_ctrl.get();
+	}
 }
 
 void
@@ -223,10 +228,16 @@ AngularVelocityController::Run()
 				}
 			}
 
-			// run rate controller
-			//_control.update(angular_velocity, _angular_velocity_sp, _angular_acceleration, dt, _maybe_landed || _landed);
+			if(_use_so3){
 			// run SO3 controller
-			_control.updateSO3(angular_velocity, _angular_velocity_sp, _angular_acceleration, dt, _maybe_landed || _landed, _R, _R_sp);
+			_control.updateSO3(angular_velocity, _angular_velocity_sp, _angular_acceleration, dt, _maybe_landed || _landed, _R, _R_sp);	
+			}
+			else{
+			// run rate controller
+			_control.update(angular_velocity, _angular_velocity_sp, _angular_acceleration, dt, _maybe_landed || _landed);
+
+			}
+			
 
 			// publish rate controller status
 			rate_ctrl_status_s rate_ctrl_status{};

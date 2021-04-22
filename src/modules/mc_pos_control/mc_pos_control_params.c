@@ -763,3 +763,15 @@ PARAM_DEFINE_FLOAT(MPC_SPOOLUP_TIME, 1.0f);
  * @group Mission
  */
 PARAM_DEFINE_INT32(MPC_YAW_MODE, 0);
+
+/**
+ * Use Tracking with 3D thrust.
+ *
+ *
+ * @min 0
+ * @max 1
+ * @value 0 use PX4 pos ctrl, and avc
+ * @value 1 use 3D thrust with tracking Control
+
+ */
+PARAM_DEFINE_INT32(USE_3D_THR, 0);

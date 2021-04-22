@@ -179,7 +179,9 @@ private:
 		(ParamInt<px4::params::MPC_ALT_MODE>) _param_mpc_alt_mode,
 		(ParamFloat<px4::params::MPC_TILTMAX_LND>) _param_mpc_tiltmax_lnd, /**< maximum tilt for landing and smooth takeoff */
 		(ParamFloat<px4::params::MPC_THR_MIN>) _param_mpc_thr_min,
-		(ParamFloat<px4::params::MPC_THR_MAX>) _param_mpc_thr_max
+		(ParamFloat<px4::params::MPC_THR_MAX>) _param_mpc_thr_max,
+		(ParamBool<px4::params::USE_3D_THR>) _param_use_3d_thr
+		
 	);
 
 	control::BlockDerivative _vel_x_deriv; /**< velocity derivative in x */
@@ -412,6 +414,10 @@ MulticopterPositionControl::parameters_update(bool force)
 			_control.setHoverThrust(_param_mpc_thr_hover.get());
 			_hover_thrust_initialized = true;
 		}
+
+	
+		_control._use3DThrust = _param_use_3d_thr.get();	
+	
 
 		_flight_tasks.handleParameterUpdate();
 
@@ -702,7 +708,8 @@ MulticopterPositionControl::Run()
 			_control.setConstraints(constraints);
 			
 			if(_control._use3DThrust){
-				_control.setTrackingSetpoint(_tracking_setpoint);
+				_control.setInputSetpoint(setpoint);
+				//_control.setTrackingSetpoint(_tracking_setpoint);
 			}
 			else{
 				_control.setInputSetpoint(setpoint);

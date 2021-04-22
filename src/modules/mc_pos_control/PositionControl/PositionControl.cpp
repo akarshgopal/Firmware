@@ -149,26 +149,29 @@ void PositionControl::_trackingControl(const float dt)
 	ControlMath::setZeroIfNanVector3f(_acc_sp);
 
 	// Constrain velocity in z-direction.
+	/*
 	_vel_sp(2) = math::constrain(_vel_sp(2), -_constraints.speed_up, _constraints.speed_down);
 	_vel_sp(0) = math::constrain(_vel_sp(0), -5.0f, 5.0f);
 	_vel_sp(1) = math::constrain(_vel_sp(1), -5.0f, 5.0f);
 	_acc_sp(0) = math::constrain(_acc_sp(0), -CONSTANTS_ONE_G*0.15f, CONSTANTS_ONE_G*0.15f);
 	_acc_sp(1) = math::constrain(_acc_sp(1), -CONSTANTS_ONE_G*0.15f, CONSTANTS_ONE_G*0.15f);
-	_acc_sp(2) = math::constrain(_acc_sp(2), -CONSTANTS_ONE_G, CONSTANTS_ONE_G);
-	Vector3f pos_gains = Vector3f(10,10,16.0);
-	Vector3f vel_gains = Vector3f(4.0,4.0,8.0);
+	//_acc_sp(2) = math::constrain(_acc_sp(2), -CONSTANTS_ONE_G, CONSTANTS_ONE_G);
+	*/
+	//Vector3f pos_error = (_pos - _pos_sp);
+	//Vector3f pos_gains = Vector3f(10,10,16.0);
+	//Vector3f vel_gains = Vector3f(4.0,4.0,8.0);
 
 	_thr_sp = Vector3f(
 			_R.transpose()*(
-				(- (_pos - _pos_sp).emult(pos_gains) //(_gain_pos_p)
-				- (_vel - _vel_sp).emult(vel_gains) //(_gain_vel_p)
-				+ _acc_sp)*_hover_thrust/CONSTANTS_ONE_G - Vector3f(0.0,0.0,_hover_thrust)
+				(- (_pos - _pos_sp).emult(_gain_pos_p) //(_gain_pos_p)
+				- (_vel - 0.0f*_vel_sp).emult(_gain_vel_p) //(_gain_vel_p)
+				+ 0.f*_acc_sp)*_hover_thrust/CONSTANTS_ONE_G - Vector3f(0.0,0.0,_hover_thrust)
 			) 
 			+ _angular_vel.cross((_R.transpose())*(_vel))*_hover_thrust/CONSTANTS_ONE_G
 			);
 
 	// Scale thrust assuming hover thrust produces standard gravity
-	
+	ControlMath::setZeroIfNanVector3f(_thr_sp);
 	// Saturate maximal vertical thrust
 	_thr_sp(2) = math::max(_thr_sp(2), -_lim_thr_max);
 
@@ -184,7 +187,7 @@ void PositionControl::_trackingControl(const float dt)
 	if (thrust_sp_xy_norm > thrust_max_xy) {
 		_thr_sp.xy() = thrust_sp_xy / thrust_sp_xy_norm * thrust_max_xy;
 	}
-	_thr_sp.xy() = thrust_sp_xy*0.10;
+	_thr_sp.xy() = thrust_sp_xy*0.2;
 	
 }
 void PositionControl::_positionControl()
