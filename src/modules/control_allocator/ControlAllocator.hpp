@@ -144,8 +144,8 @@ private:
 	uORB::Publication<control_allocator_status_s>	_control_allocator_status_pub{ORB_ID(control_allocator_status)};	/**< control allocator status publication */
 
 	// actuator_controls publication handles (temporary hack to plug actuator_setpoint into the mixer system)
-	uORB::Publication<actuator_controls_s>	_actuator_controls_4_pub{ORB_ID(actuator_controls_4)};	/**< actuator controls 4 publication */
-	uORB::Publication<actuator_controls_s>	_actuator_controls_5_pub{ORB_ID(actuator_controls_5)};	/**< actuator controls 5 publication */
+	uORB::Publication<actuator_controls_s>	_actuator_controls_2_pub{ORB_ID(actuator_controls_2)};	/**< actuator controls 4 publication */
+	uORB::Publication<actuator_controls_s>	_actuator_controls_4_pub{ORB_ID(actuator_controls_4)};	/**< actuator controls 5 publication */
 
 	uORB::Subscription _parameter_update_sub{ORB_ID(parameter_update)};		/**< parameter updates subscription */
 	uORB::Subscription _battery_status_sub{ORB_ID(battery_status)};			/**< battery status subscription */

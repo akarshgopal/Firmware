@@ -518,38 +518,38 @@ void
 ControlAllocator::publish_legacy_actuator_controls()
 {
 	// For compatibility with the current mixer system,
-	// publish normalized version on actuator_controls_4/5
+	// publish normalized version on actuator_controls_2/5
+	actuator_controls_s actuator_controls_2{};
 	actuator_controls_s actuator_controls_4{};
-	actuator_controls_s actuator_controls_5{};
+	actuator_controls_2.timestamp = hrt_absolute_time();
 	actuator_controls_4.timestamp = hrt_absolute_time();
-	actuator_controls_5.timestamp = hrt_absolute_time();
+	actuator_controls_2.timestamp_sample = _timestamp_sample;
 	actuator_controls_4.timestamp_sample = _timestamp_sample;
-	actuator_controls_5.timestamp_sample = _timestamp_sample;
 
 	matrix::Vector<float, NUM_ACTUATORS> actuator_sp = _control_allocation->getActuatorSetpoint();
 	matrix::Vector<float, NUM_ACTUATORS> actuator_sp_normalized = _control_allocation->normalizeActuatorSetpoint(
 				actuator_sp);
 
 	for (size_t i = 0; i < 8; i++) {
-		actuator_controls_4.control[i] = (PX4_ISFINITE(actuator_sp_normalized(i))) ? actuator_sp_normalized(i) : 0.0f;
-		actuator_controls_5.control[i] = (PX4_ISFINITE(actuator_sp_normalized(i + 8))) ? actuator_sp_normalized(i + 8) : 0.0f;
+		actuator_controls_2.control[i] = (PX4_ISFINITE(actuator_sp_normalized(i))) ? actuator_sp_normalized(i) : 0.0f;
+		actuator_controls_4.control[i] = (PX4_ISFINITE(actuator_sp_normalized(i + 8))) ? actuator_sp_normalized(i + 8) : 0.0f;
 	}
 
+	_actuator_controls_2_pub.publish(actuator_controls_2);
 	_actuator_controls_4_pub.publish(actuator_controls_4);
-	_actuator_controls_5_pub.publish(actuator_controls_5);
 }
 
 void
 ControlAllocator::publish_legacy_actuator_controls_omnirotor()
 {
 	// For compatibility with the current mixer system,
-	// publish normalized version on actuator_controls_4/5
+	// publish normalized version on actuator_controls_2/5
+	actuator_controls_s actuator_controls_2{};
 	actuator_controls_s actuator_controls_4{};
-	actuator_controls_s actuator_controls_5{};
+	actuator_controls_2.timestamp = hrt_absolute_time();
 	actuator_controls_4.timestamp = hrt_absolute_time();
-	actuator_controls_5.timestamp = hrt_absolute_time();
+	actuator_controls_2.timestamp_sample = _timestamp_sample;
 	actuator_controls_4.timestamp_sample = _timestamp_sample;
-	actuator_controls_5.timestamp_sample = _timestamp_sample;
 
 	//extended actuator vector
 	matrix::Vector<float, NUM_ACTUATORS> ext_actuator_sp = _control_allocation->getActuatorSetpoint();
@@ -566,12 +566,12 @@ ControlAllocator::publish_legacy_actuator_controls_omnirotor()
 				actuator_sp);
 
 	for (size_t i = 0; i < 8; i++) {
-		actuator_controls_4.control[i] = (PX4_ISFINITE(actuator_sp_normalized(i))) ? actuator_sp_normalized(i) : 0.0f;
-		actuator_controls_5.control[i] = (PX4_ISFINITE(actuator_sp_normalized(i + 8))) ? actuator_sp_normalized(i + 8) : 0.0f;
+		actuator_controls_2.control[i] = (PX4_ISFINITE(actuator_sp_normalized(i))) ? actuator_sp_normalized(i) : 0.0f;
+		actuator_controls_4.control[i] = (PX4_ISFINITE(actuator_sp_normalized(i + 8))) ? actuator_sp_normalized(i + 8) : 0.0f;
 	}
 
+	_actuator_controls_2_pub.publish(actuator_controls_2);
 	_actuator_controls_4_pub.publish(actuator_controls_4);
-	_actuator_controls_5_pub.publish(actuator_controls_5);
 }
 
 int ControlAllocator::task_spawn(int argc, char *argv[])

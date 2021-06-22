@@ -54,11 +54,11 @@ AllocatedActuatorMixer::AllocatedActuatorMixer(ControlCallback control_cb,
 	Mixer(control_cb, cb_handle)
 {
 	if (index < 8) {
-		_control_group = 4;
+		_control_group = 2;
 		_control_index = index;
 
 	} else if (index < 16) {
-		_control_group = 5;
+		_control_group = 4;
 		_control_index = index - 8;
 
 	} else {

@@ -1,0 +1,115 @@
+#!/bin/sh
+#
+# @name Saxion M4E TiltRotor-Mini
+#
+# @type Hexarotor x
+# @class Copter
+#
+# @output MAIN1 motor 1
+# @output MAIN2 motor 2
+# @output MAIN3 motor 3
+# @output MAIN4 motor 4
+# @output MAIN5 motor 5
+# @output MAIN6 motor 6
+#
+# @output AUX1 servo 1
+# @output AUX2 servo 2
+# @output AUX3 servo 3
+# @output AUX4 servo 4
+# @output AUX5 servo 5
+# @output AUX6 servo 6
+
+sh /etc/init.d/rc.mc_defaults
+sh /etc/init.d/rc.ctrlalloc
+
+if [ $AUTOCNF = yes ]
+then
+
+	param set MPC_USE_HTE 0
+
+	param set VM_MASS 2.0
+	param set VM_INERTIA_XX 0.01
+	param set VM_INERTIA_YY 0.01
+	param set VM_INERTIA_ZZ 0.02
+
+	param set CA_AIRFRAME 3
+	param set CA_METHOD 0
+	param set CA_ACT0_MIN 0.0
+	param set CA_ACT1_MIN 0.0
+	param set CA_ACT2_MIN 0.0
+	param set CA_ACT3_MIN 0.0
+	param set CA_ACT4_MIN 0.0
+	param set CA_ACT5_MIN 0.0
+	param set CA_ACT6_MIN 0.0
+	param set CA_ACT7_MIN 0.0
+	param set CA_ACT0_MAX 1.0
+	param set CA_ACT1_MAX 1.0
+	param set CA_ACT2_MAX 1.0
+	param set CA_ACT3_MAX 1.0
+	param set CA_ACT4_MAX 1.0
+	param set CA_ACT5_MAX 1.0
+	param set CA_ACT6_MAX 1.0
+	param set CA_ACT7_MAX 1.0
+
+	param set CA_ACT8_MIN -0.785
+	param set CA_ACT9_MIN -0.785
+	param set CA_ACT10_MIN -0.785
+	param set CA_ACT11_MIN -0.785
+	param set CA_ACT12_MIN -0.785
+	param set CA_ACT13_MIN -0.785
+	param set CA_ACT14_MIN -0.785
+	param set CA_ACT15_MIN -0.785
+	param set CA_ACT8_MAX 0.785
+	param set CA_ACT9_MAX 0.785
+	param set CA_ACT10_MAX 0.785
+	param set CA_ACT11_MAX 0.785
+	param set CA_ACT12_MAX 0.785
+	param set CA_ACT13_MAX 0.785
+	param set CA_ACT14_MAX 0.785
+	param set CA_ACT15_MAX 0.785
+
+
+	param set CA_MC_R0_PX 0.0
+	param set CA_MC_R0_PY 1.0
+	param set CA_MC_R0_CT 18
+	param set CA_MC_R0_KM -0.05
+	param set CA_MC_R1_PX 0.0
+	param set CA_MC_R1_PY -1.0
+	param set CA_MC_R1_CT 18
+	param set CA_MC_R1_KM 0.05
+	param set CA_MC_R2_PX 0.866025
+	param set CA_MC_R2_PY -0.5
+	param set CA_MC_R2_CT 18
+	param set CA_MC_R2_KM -0.05
+	param set CA_MC_R3_PX -0.866025
+	param set CA_MC_R3_PY 0.5
+	param set CA_MC_R3_CT 18
+	param set CA_MC_R3_KM 0.05
+	param set CA_MC_R4_PX 0.866025
+	param set CA_MC_R4_PY 0.5
+	param set CA_MC_R4_CT 18
+	param set CA_MC_R4_KM 0.05
+	param set CA_MC_R5_PX -0.866025
+	param set CA_MC_R5_PY -0.5
+	param set CA_MC_R5_CT 18
+	param set CA_MC_R5_KM -0.05
+
+	param set USE_3D_THR 0
+	param set MPC_XY_P 10
+	param set MPC_Z_P 16
+	param set MPC_XY_VEL_P_ACC 4
+	param set MPC_Z_VEL_P_ACC 8
+	param set USE_SO3_CTRL 0
+	param set SO3_RX_P 32.0
+	param set SO3_RY_P 32.0
+	param set SO3_RZ_P 25.0	
+	param set AVC_X_P 28.0
+	param set AVC_Y_P 28.0
+	param set AVC_Z_P 28.0
+fi
+
+set MIXER saxion_tilt
+set PWM_OUT 123456
+
+set MIXER_AUX saxion_tilt
+set PWM_AUX_OUT 123456
